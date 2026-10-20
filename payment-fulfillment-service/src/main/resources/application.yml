@@ -1,0 +1,56 @@
+server:
+  port: ${PAYMENT_SERVICE_PORT:8083}
+
+spring:
+  application:
+    name: payment-fulfillment-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/flashsale_db}
+    username: ${SPRING_DATASOURCE_USERNAME:flashsale}
+    password: ${SPRING_DATASOURCE_PASSWORD:flashsale_secret}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: payment-fulfillment-workers
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: record
+      concurrency: 4
+
+flashsale:
+  services:
+    inventory-url: ${INVENTORY_SERVICE_URL:http://localhost:8082}
+  simulation:
+    payment-mode: ${PAYMENT_SIMULATION_MODE:ALWAYS_SUCCESS}
+    latency-ms: ${PAYMENT_SIMULATION_LATENCY_MS:0}
+  kafka:
+    consumer-enabled: ${KAFKA_CONSUMER_ENABLED:true}
+  expiry:
+    enabled: ${RESERVATION_EXPIRY_ENABLED:true}
+    interval-ms: 5000
+  reconciliation:
+    enabled: ${RECONCILIATION_ENABLED:true}
+    interval-ms: 30000
+    stale-cutoff-minutes: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true

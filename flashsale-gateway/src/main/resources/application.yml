@@ -1,0 +1,97 @@
+server:
+  port: ${GATEWAY_PORT:8080}
+
+spring:
+  application:
+    name: flashsale-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 5s
+        pool:
+          type: ELASTIC
+          max-connections: 500
+          acquire-timeout: 3000
+      routes:
+        - id: order-service-orders
+          uri: ${ORDER_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/orders/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@clientKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCircuitBreaker
+                fallbackUri: forward:/fallback/service-degraded
+        - id: inventory-service-sales
+          uri: ${INVENTORY_SERVICE_URI:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/sales/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@clientKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: inventoryServiceCircuitBreaker
+                fallbackUri: forward:/fallback/service-degraded
+        - id: payment-service-simulation
+          uri: ${PAYMENT_SERVICE_URI:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/simulation/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: paymentServiceCircuitBreaker
+                fallbackUri: forward:/fallback/service-degraded
+        - id: admin-sales-routes
+          uri: ${INVENTORY_SERVICE_URI:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/admin/sales/**
+        - id: admin-routes
+          uri: ${ORDER_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/admin/**
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s
+
+flashsale:
+  gateway:
+    rate-limit:
+      replenish-rate: 20
+      burst-capacity: 40
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true

@@ -1,0 +1,32 @@
+server:
+  port: 0
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: test-order-route
+          uri: http://localhost:59999
+          predicates:
+            - Path=/test/orders/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: testCircuitBreaker
+                fallbackUri: forward:/fallback/service-degraded
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 1s
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 1s

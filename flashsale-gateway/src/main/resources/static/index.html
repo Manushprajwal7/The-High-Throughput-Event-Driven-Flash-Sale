@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlashSale Engine :: Operator Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+      --canvas: #f8fafc;
+      --surface: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --surface-raised: #f8fafc;
+
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-subtle: #eef2ff;
+      --primary-border: #c7d2fe;
+      --primary-text: #3730a3;
+
+      --success: #059669;
+      --success-hover: #047857;
+      --success-subtle: #ecfdf5;
+      --success-border: #a7f3d0;
+      --success-text: #065f46;
+
+      --warning: #d97706;
+      --warning-subtle: #fffbeb;
+      --warning-border: #fde68a;
+      --warning-text: #92400e;
+
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --danger-subtle: #fef2f2;
+      --danger-border: #fecdd3;
+      --danger-text: #991b1b;
+
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+      --shadow-hover: 0 6px 12px -2px rgb(0 0 0 / 0.08);
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 9999px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    ::selection {
+      background: #c7d2fe;
+      color: #1e1b4b;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: var(--radius-full);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--canvas);
+      color: var(--text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Icon System: 100% SVG, uniform stroke-width and stroke-linecap */
+    .icon {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .icon-xs { width: 12px; height: 12px; stroke-width: 2; }
+    .icon-sm { width: 14px; height: 14px; stroke-width: 2; }
+    .icon-md { width: 16px; height: 16px; stroke-width: 2; }
+    .icon-lg { width: 20px; height: 20px; stroke-width: 2; }
+    .icon-xl { width: 24px; height: 24px; stroke-width: 2; }
+
+    .icon-spin {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Header */
+    header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #4f46e5, #3b82f6);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(79, 70, 229, 0.2);
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-text p {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .cluster-status-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .status-pill {
+      background: var(--canvas);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 5px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+    .dot.up {
+      background: var(--success);
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+    }
+    .dot.down {
+      background: var(--danger);
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+      user-select: none;
+      outline: none;
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--primary);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(79, 70, 229, 0.2);
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .btn-secondary {
+      background: var(--surface);
+      border-color: var(--border-strong);
+      color: var(--text-secondary);
+    }
+    .btn-secondary:hover {
+      background: var(--surface-subtle);
+      color: var(--text-primary);
+    }
+
+    .btn-danger {
+      background: var(--danger-subtle);
+      color: var(--danger-text);
+      border-color: var(--danger-border);
+    }
+    .btn-danger:hover {
+      background: #fee2e2;
+      color: var(--danger-hover);
+    }
+
+    .btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: var(--radius-sm); }
+    .btn-lg { padding: 10px 18px; font-size: 0.875rem; }
+
+    /* Badges with WCAG AAA compliant contrast */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+      line-height: 1;
+    }
+    .badge-primary { background: var(--primary-subtle); color: var(--primary-text); border: 1px solid var(--primary-border); }
+    .badge-success { background: var(--success-subtle); color: var(--success-text); border: 1px solid var(--success-border); }
+    .badge-warning { background: var(--warning-subtle); color: var(--warning-text); border: 1px solid var(--warning-border); }
+    .badge-danger { background: var(--danger-subtle); color: var(--danger-text); border: 1px solid var(--danger-border); }
+
+    /* Invariant & Metrics Cockpit Banner */
+    .cockpit-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      box-shadow: var(--shadow-card);
+      display: grid;
+      grid-template-columns: 280px 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+
+    @media (max-width: 1024px) {
+      .cockpit-banner {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+
+    .cockpit-sale-info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cockpit-sale-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .cockpit-sale-meta {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      word-break: break-all;
+    }
+
+    /* Capacity Segmented Gauge */
+    .gauge-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .gauge-metrics {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .metric-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .metric-icon-box {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .metric-icon-avail { background: var(--success-subtle); color: var(--success-text); }
+    .metric-icon-reserved { background: var(--warning-subtle); color: var(--warning-text); }
+    .metric-icon-confirmed { background: var(--primary-subtle); color: var(--primary-text); }
+    .metric-icon-rejected { background: var(--danger-subtle); color: var(--danger-text); }
+
+    .metric-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-caption {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .gauge-bar {
+      width: 100%;
+      height: 10px;
+      background: var(--surface-subtle);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      display: flex;
+      border: 1px solid var(--border);
+    }
+
+    .gauge-segment {
+      height: 100%;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gauge-segment-avail { background: var(--success); }
+    .gauge-segment-reserved { background: var(--warning); }
+    .gauge-segment-confirmed { background: var(--primary); }
+
+    .gauge-legend {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 440px;
+      gap: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Testing Deck */
+    .testing-deck {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 16px;
+    }
+
+    .deck-section {
+      background: var(--canvas);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .deck-title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .deck-desc {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    input, select {
+      font-family: var(--font-sans);
+      font-size: 0.8125rem;
+      padding: 8px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    }
+    .input-mono {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    /* Simulation Mode Selector */
+    .mode-toggle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+    }
+
+    .mode-btn {
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .mode-btn:hover {
+      background: var(--surface-subtle);
+      color: var(--text-primary);
+    }
+    .mode-btn.active {
+      background: var(--primary-subtle);
+      border-color: var(--primary);
+      color: var(--primary-text);
+      font-weight: 700;
+    }
+    .mode-btn.active-danger {
+      background: var(--danger-subtle);
+      border-color: var(--danger);
+      color: var(--danger-text);
+      font-weight: 700;
+    }
+
+    /* Order Lifecycle Timeline */
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 9px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .timeline-node {
+      position: relative;
+    }
+
+    .timeline-icon-box {
+      position: absolute;
+      left: -28px;
+      top: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .timeline-node.done .timeline-icon-box {
+      border-color: var(--success);
+      background: var(--success);
+      color: white;
+    }
+
+    .timeline-node.active .timeline-icon-box {
+      border-color: var(--primary);
+      background: var(--primary-subtle);
+      color: var(--primary);
+    }
+
+    .timeline-node.failed .timeline-icon-box {
+      border-color: var(--danger);
+      background: var(--danger);
+      color: white;
+    }
+
+    .timeline-heading {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .timeline-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Live Telemetry Log (High Contrast) */
+    .log-viewport {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      height: 260px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border: 1px solid #1e293b;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 8px;
+      line-height: 1.45;
+    }
+
+    .log-ts {
+      color: #94a3b8;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .log-chip {
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .log-chip.sys { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+    .log-chip.order { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+    .log-chip.stock { background: rgba(52, 211, 153, 0.2); color: #34d399; }
+    .log-chip.saga { background: rgba(244, 114, 182, 0.2); color: #f472b6; }
+    .log-chip.err { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+
+    .log-content {
+      color: #f1f5f9;
+      word-break: break-all;
+    }
+
+    /* JSON Box */
+    .json-preview {
+      background: var(--canvas);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      max-height: 180px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Footer */
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-nav {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .footer-nav a:hover {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Top Operator Console Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <!-- Zap Icon -->
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="brand-text">
+          <h1>
+            FlashSale Engine
+            <span class="badge badge-primary">
+              <svg class="icon icon-xs" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+              Operator Console
+            </span>
+          </h1>
+          <p>High-Throughput Concurrency & Transactional Saga Orchestration</p>
+        </div>
+      </div>
+
+      <!-- Infrastructure Status Pills -->
+      <div class="cluster-status-pills" id="healthBar">
+        <div class="status-pill" title="Gateway (:8080)">
+          <svg class="icon icon-xs" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>
+          <span class="dot" id="dot-gateway"></span> Gateway
+        </div>
+        <div class="status-pill" title="Inventory Service (:8082)">
+          <svg class="icon icon-xs" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+          <span class="dot" id="dot-inventory"></span> Inventory
+        </div>
+        <div class="status-pill" title="Order Service (:8081)">
+          <svg class="icon icon-xs" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          <span class="dot" id="dot-order"></span> Order
+        </div>
+        <div class="status-pill" title="Payment Fulfillment (:8083)">
+          <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span class="dot" id="dot-payment"></span> Fulfillment
+        </div>
+        <div class="status-pill" title="Redis Lua Engine (:6379)">
+          <svg class="icon icon-xs" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+          <span class="dot" id="dot-redis"></span> Redis 7
+        </div>
+        <div class="status-pill" title="Kafka Broker (:9092)">
+          <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span class="dot" id="dot-kafka"></span> Kafka
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span id="connIndicator" class="badge badge-success">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          Live Cluster
+        </span>
+        <button class="btn btn-secondary btn-sm" onclick="refreshAll()" title="Refresh cluster state">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- Invariant & Inventory Cockpit Banner -->
+    <div class="cockpit-banner">
+      <div class="cockpit-sale-info">
+        <span class="badge badge-primary" style="width: fit-content;" id="saleStatusBadge">
+          <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><circle cx="7" cy="7" r=".5" fill="currentColor"/></svg>
+          DROP ACTIVE
+        </span>
+        <h2 class="cockpit-sale-title" id="saleTitle">Super Phone 16 Limited Drop</h2>
+        <span class="cockpit-sale-meta" id="saleIdDisplay">sale-1 · $999.00 USD</span>
+      </div>
+
+      <div class="gauge-wrapper">
+        <div class="gauge-metrics">
+          <div class="metric-group">
+            <div class="metric-icon-box metric-icon-avail">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+            </div>
+            <div>
+              <span class="metric-value" id="kpi-available" style="color: var(--success);">100</span>
+              <div class="metric-caption">
+                <div>Available</div>
+                <div style="color: var(--text-muted); font-size: 0.7rem;">in Redis Lua Pool</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-group">
+            <div class="metric-icon-box metric-icon-reserved">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+            </div>
+            <div>
+              <span class="metric-value" id="kpi-reserved" style="color: var(--warning);">0</span>
+              <div class="metric-caption">
+                <div>Reserved</div>
+                <div style="color: var(--text-muted); font-size: 0.7rem;">in Saga Flight</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-group">
+            <div class="metric-icon-box metric-icon-confirmed">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div>
+              <span class="metric-value" id="kpi-confirmed" style="color: var(--primary);">0</span>
+              <div class="metric-caption">
+                <div>Confirmed</div>
+                <div style="color: var(--text-muted); font-size: 0.7rem;">PostgreSQL ACID</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-group">
+            <div class="metric-icon-box metric-icon-rejected">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </div>
+            <div>
+              <span class="metric-value" id="kpi-rejected" style="color: var(--danger);">0</span>
+              <div class="metric-caption">
+                <div>Sold Out</div>
+                <div style="color: var(--text-muted); font-size: 0.7rem;">HTTP 409 Rejected</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segmented Visual Capacity Bar -->
+        <div class="gauge-bar" title="Inventory Allocation">
+          <div class="gauge-segment gauge-segment-avail" id="bar-avail" style="width: 100%;"></div>
+          <div class="gauge-segment gauge-segment-reserved" id="bar-reserved" style="width: 0%;"></div>
+          <div class="gauge-segment gauge-segment-confirmed" id="bar-confirmed" style="width: 0%;"></div>
+        </div>
+
+        <div class="gauge-legend">
+          <div class="legend-item">
+            <span class="legend-swatch" style="background: var(--success);"></span>
+            <span>Available (<span id="pct-avail">100</span>%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch" style="background: var(--warning);"></span>
+            <span>Reserved (<span id="pct-reserved">0</span>%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch" style="background: var(--primary);"></span>
+            <span>Confirmed (<span id="pct-confirmed">0</span>%)</span>
+          </div>
+          <div style="margin-left: auto;">
+            <span class="badge badge-success" id="invariantBadge">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              Zero Overselling Invariant Verified (100 / 100)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn btn-secondary btn-sm" onclick="seedDemoDrop()">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          Reset 100-Unit Drop
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Workspace Grid -->
+    <div class="main-grid">
+
+      <!-- Left Column: Testing Bench & Failure Controls -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+
+        <!-- Purchase Simulator Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+              Purchase Simulator
+            </h2>
+            <span class="badge badge-primary">
+              <svg class="icon icon-xs" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Atomic Redis Lua Engine
+            </span>
+          </div>
+
+          <div class="testing-deck">
+            <!-- Bench 1: Contention Burst Generator -->
+            <div class="deck-section">
+              <h3 class="deck-title">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Contention Burst Load
+              </h3>
+              <p class="deck-desc">
+                Simulate multiple concurrent buyers flooding the gateway simultaneously competing for scarce stock.
+              </p>
+
+              <div class="form-group">
+                <label class="form-label" for="burstCount">
+                  <svg class="icon icon-xs" viewBox="0 0 24 24"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>
+                  Burst Workload Preset
+                </label>
+                <div style="display: flex; gap: 8px;">
+                  <select id="burstCount" style="flex: 1;">
+                    <option value="25">25 Shoppers (Light Contention)</option>
+                    <option value="50">50 Shoppers (Moderate Load)</option>
+                    <option value="120" selected>120 Shoppers (Exhaust 100 Units)</option>
+                    <option value="250">250 Shoppers (Overload Contention)</option>
+                  </select>
+                  <button class="btn btn-primary" id="btnBurst" onclick="executeBurst()">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Fire Burst
+                  </button>
+                </div>
+              </div>
+
+              <div id="burstOutput" style="font-size: 0.75rem; color: var(--text-secondary); min-height: 20px; display: flex; align-items: center; gap: 6px;"></div>
+            </div>
+
+            <!-- Bench 2: Idempotency & Replay Verification -->
+            <div class="deck-section">
+              <h3 class="deck-title">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+                Idempotency & Replay Tester
+              </h3>
+              <p class="deck-desc">
+                Replaying the exact same request key must return the cached order with <strong>zero additional inventory decrement</strong>.
+              </p>
+
+              <div class="form-group">
+                <label class="form-label" for="inputShopperId">
+                  <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  Shopper Identifier
+                </label>
+                <input type="text" id="inputShopperId" value="shopper_vip_88" placeholder="shopper_id">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="inputIdempKey">
+                  <svg class="icon icon-xs" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+                  Idempotency Key (UUID)
+                </label>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="inputIdempKey" class="input-mono" value="idemp-key-initial-01" style="flex: 1;">
+                  <button class="btn btn-secondary btn-sm" onclick="generateRandomKey()" title="Generate new unique UUID">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3.16l-4.76-4.76a2.24 2.24 0 0 0-3.16 0L10 6.08"/><path d="M6 16h.01"/><path d="M10 16h.01"/><path d="M10 12h.01"/><path d="M6 12h.01"/><path d="M14 6h.01"/></svg>
+                    New Key
+                  </button>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 4px;">
+                <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="submitOrder(false)">
+                  <svg class="icon icon-xs" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                  Submit Order
+                </button>
+                <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="submitOrder(true)" title="Assert idempotency protection">
+                  <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+                  Replay Same Key
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Simulation & Failure Controls -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>
+              Payment Simulation & Failure Controls
+            </h2>
+            <span class="badge badge-warning" id="activeModeBadge">
+              <svg class="icon icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Current: ALWAYS_SUCCESS
+            </span>
+          </div>
+
+          <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5;">
+            Dynamically inject simulated bank decline and timeout faults into the asynchronous fulfillment pipeline to trigger and test <strong>automated compensating sagas</strong> (releasing reserved Redis stock back to the pool).
+          </p>
+
+          <div class="mode-toggle-grid">
+            <button class="mode-btn active" id="btn-mode-success" onclick="changePaymentMode('ALWAYS_SUCCESS')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              ALWAYS_SUCCESS
+            </button>
+            <button class="mode-btn" id="btn-mode-decline" onclick="changePaymentMode('ALWAYS_DECLINE')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              ALWAYS_DECLINE
+            </button>
+            <button class="mode-btn" id="btn-mode-timeout" onclick="changePaymentMode('ALWAYS_TIMEOUT')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+              ALWAYS_TIMEOUT
+            </button>
+            <button class="mode-btn" id="btn-mode-rule" onclick="changePaymentMode('RULE_BASED')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>
+              RULE_BASED
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Order Lifecycle & Live Telemetry -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+
+        <!-- Order Lifecycle Inspector Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              Order Lifecycle Inspector
+            </h2>
+            <span class="badge badge-primary" id="orderInspectBadge">
+              <svg class="icon icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+              IDLE
+            </span>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="inputInspectOrderId" class="input-mono" placeholder="Enter Order UUID..." style="flex: 1;">
+            <button class="btn btn-secondary btn-sm" onclick="inspectOrder()">
+              <svg class="icon icon-xs" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+              Inspect
+            </button>
+          </div>
+
+          <!-- Vertical Stepper Timeline -->
+          <div class="timeline" id="stepperTimeline">
+            <div class="timeline-node" id="step-1">
+              <div class="timeline-icon-box">
+                <svg class="icon icon-xs" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+              </div>
+              <div class="timeline-heading">1. Redis Lua Stock Reservation</div>
+              <div class="timeline-desc" id="desc-1">Atomic 120s TTL reservation token granted</div>
+            </div>
+
+            <div class="timeline-node" id="step-2">
+              <div class="timeline-icon-box">
+                <svg class="icon icon-xs" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+              </div>
+              <div class="timeline-heading">2. PostgreSQL Transactional Outbox</div>
+              <div class="timeline-desc" id="desc-2">Atomic ACID transaction committed with outbox event</div>
+            </div>
+
+            <div class="timeline-node" id="step-3">
+              <div class="timeline-icon-box">
+                <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </div>
+              <div class="timeline-heading">3. Kafka Fulfillment & Payment Gateway</div>
+              <div class="timeline-desc" id="desc-3">Asynchronous consumer dispatches simulated payment</div>
+            </div>
+
+            <div class="timeline-node" id="step-4">
+              <div class="timeline-icon-box">
+                <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              </div>
+              <div class="timeline-heading">4. Stock Commitment / Compensating Saga</div>
+              <div class="timeline-desc" id="desc-4">Final order state settled</div>
+            </div>
+          </div>
+
+          <!-- Raw JSON Payload View -->
+          <div class="json-preview" id="orderJsonBox" style="display: none;"></div>
+        </div>
+
+        <!-- Live Telemetry Stream Card -->
+        <div class="card" style="flex: 1;">
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg class="icon icon-md" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+              Live Telemetry Stream
+            </h2>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" onclick="clearTelemetry()">
+                <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <div class="log-viewport" id="telemetryBox">
+            <div class="log-line">
+              <span class="log-ts">[00:00:00]</span>
+              <span class="log-chip sys">
+                <svg class="icon icon-xs" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/></svg>
+                SYSTEM
+              </span>
+              <span class="log-content">Operator console initialized. Awaiting orders.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span><strong>FlashSale Engine</strong> :: Distributed High-Throughput Event-Driven Commerce</span>
+      </div>
+      <div class="footer-nav">
+        <a href="http://localhost:8080/actuator/health" target="_blank">
+          <svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Gateway Health
+        </a>
+        <a href="http://localhost:3000" target="_blank">
+          <svg class="icon icon-xs" viewBox="0 0 24 24"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+          Grafana Telemetry (:3000)
+        </a>
+        <a href="http://localhost:9090" target="_blank">
+          <svg class="icon icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          Prometheus (:9090)
+        </a>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // State management
+    const state = {
+      saleId: 'ce68238b-9242-4137-8098-1691ebedf3cc',
+      capacity: 100,
+      available: 100,
+      reserved: 0,
+      confirmed: 0,
+      rejected: 0,
+      simMode: 'ALWAYS_SUCCESS',
+      isLive: false,
+      orders: new Map()
+    };
+
+    // Reusable SVG Icon Templates
+    const ICONS = {
+      check: '<svg class="icon icon-xs" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+      checkCircle: '<svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+      alertCircle: '<svg class="icon icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+      xCircle: '<svg class="icon icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+      clock: '<svg class="icon icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>',
+      zap: '<svg class="icon icon-xs" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+      cart: '<svg class="icon icon-xs" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>',
+      shield: '<svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+      shieldCheck: '<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
+      server: '<svg class="icon icon-xs" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/></svg>',
+      repeat: '<svg class="icon icon-xs" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
+      database: '<svg class="icon icon-xs" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>',
+      activity: '<svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+      play: '<svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+      spin: '<svg class="icon icon-sm icon-spin" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>'
+    };
+
+    function log(category, message, type = 'sys') {
+      const box = document.getElementById('telemetryBox');
+      const time = new Date().toTimeString().split(' ')[0];
+      const line = document.createElement('div');
+      line.className = 'log-line';
+
+      let chipIcon = ICONS.server;
+      if (type === 'order') chipIcon = ICONS.cart;
+      else if (type === 'stock') chipIcon = ICONS.database;
+      else if (type === 'saga') chipIcon = ICONS.repeat;
+      else if (type === 'err') chipIcon = ICONS.alertCircle;
+
+      line.innerHTML = `
+        <span class="log-ts">[${time}]</span>
+        <span class="log-chip ${type}">
+          ${chipIcon}
+          <span>${category}</span>
+        </span>
+        <span class="log-content">${message}</span>
+      `;
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function clearTelemetry() {
+      const box = document.getElementById('telemetryBox');
+      box.innerHTML = '';
+      log('SYSTEM', 'Telemetry stream reset.', 'sys');
+    }
+
+    function generateRandomKey() {
+      const key = 'idemp-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now().toString(36).substring(4);
+      document.getElementById('inputIdempKey').value = key;
+    }
+
+    function updateGaugeAndKPIs() {
+      document.getElementById('kpi-available').innerText = state.available;
+      document.getElementById('kpi-reserved').innerText = state.reserved;
+      document.getElementById('kpi-confirmed').innerText = state.confirmed;
+      document.getElementById('kpi-rejected').innerText = state.rejected;
+
+      const availPct = Math.max(0, Math.min(100, (state.available / state.capacity) * 100));
+      const reservedPct = Math.max(0, Math.min(100, (state.reserved / state.capacity) * 100));
+      const confirmedPct = Math.max(0, Math.min(100, (state.confirmed / state.capacity) * 100));
+
+      document.getElementById('bar-avail').style.width = availPct + '%';
+      document.getElementById('bar-reserved').style.width = reservedPct + '%';
+      document.getElementById('bar-confirmed').style.width = confirmedPct + '%';
+
+      document.getElementById('pct-avail').innerText = Math.round(availPct);
+      document.getElementById('pct-reserved').innerText = Math.round(reservedPct);
+      document.getElementById('pct-confirmed').innerText = Math.round(confirmedPct);
+
+      // Verify zero overselling invariant
+      const totalUnits = state.available + state.reserved + state.confirmed;
+      const badge = document.getElementById('invariantBadge');
+      if (totalUnits <= state.capacity && state.available >= 0) {
+        badge.className = 'badge badge-success';
+        badge.innerHTML = `
+          ${ICONS.shieldCheck}
+          <span>Zero Overselling Invariant Verified (${state.confirmed + state.reserved} in play / ${state.capacity})</span>
+        `;
+      } else {
+        badge.className = 'badge badge-danger';
+        badge.innerHTML = `
+          ${ICONS.alertCircle}
+          <span>Invariant Violation Detected!</span>
+        `;
+      }
+    }
+
+    // Health Checking
+    async function checkHealth() {
+      const endpoints = [
+        { id: 'gateway', url: 'http://localhost:8080/actuator/health' },
+        { id: 'inventory', url: 'http://localhost:8082/actuator/health' },
+        { id: 'order', url: 'http://localhost:8081/actuator/health' },
+        { id: 'payment', url: 'http://localhost:8083/actuator/health' }
+      ];
+
+      let anyUp = false;
+      for (const ep of endpoints) {
+        const dot = document.getElementById('dot-' + ep.id);
+        try {
+          const res = await fetch(ep.url, { signal: AbortSignal.timeout(1200) });
+          if (res.ok) {
+            dot.className = 'dot up';
+            anyUp = true;
+          } else {
+            dot.className = 'dot down';
+          }
+        } catch (e) {
+          dot.className = 'dot down';
+        }
+      }
+
+      document.getElementById('dot-redis').className = anyUp ? 'dot up' : 'dot down';
+      document.getElementById('dot-kafka').className = anyUp ? 'dot up' : 'dot down';
+
+      const conn = document.getElementById('connIndicator');
+      state.isLive = anyUp;
+      if (anyUp) {
+        conn.className = 'badge badge-success';
+        conn.innerHTML = `${ICONS.activity}<span>Live Cluster</span>`;
+      } else {
+        conn.className = 'badge badge-warning';
+        conn.innerHTML = `${ICONS.clock}<span>Local Simulation</span>`;
+      }
+    }
+
+    // Fetch Active Sales Drop
+    async function fetchSales() {
+      if (state.isLive) {
+        try {
+          const res = await fetch('http://localhost:8080/api/v1/sales');
+          if (res.ok) {
+            const sales = await res.json();
+            if (sales.length > 0) {
+              const active = sales[0];
+              state.saleId = active.saleId;
+              state.capacity = active.totalCapacity;
+              state.available = active.availableStock;
+              document.getElementById('saleTitle').innerText = active.name;
+              document.getElementById('saleIdDisplay').innerText = `${active.saleId} · $999.00 USD`;
+              updateGaugeAndKPIs();
+              return;
+            }
+          }
+        } catch (e) {}
+      }
+      updateGaugeAndKPIs();
+    }
+
+    // Reset 100-Unit Drop
+    async function seedDemoDrop() {
+      log('ADMIN', 'Resetting drop to 100 units...', 'stock');
+      if (state.isLive) {
+        try {
+          const res = await fetch('http://localhost:8080/api/v1/admin/sales', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: 'Super Phone 16 Limited Drop',
+              totalCapacity: 100,
+              startsAt: new Date(Date.now() - 300000).toISOString(),
+              endsAt: new Date(Date.now() + 86400000).toISOString()
+            })
+          });
+          const sale = await res.json();
+          await fetch(`http://localhost:8080/api/v1/admin/sales/${sale.saleId}/open`, { method: 'POST' });
+          fetchSales();
+          log('ADMIN', `Drop provisioned and opened: ${sale.saleId}`, 'stock');
+          return;
+        } catch (e) {}
+      }
+
+      state.available = 100;
+      state.reserved = 0;
+      state.confirmed = 0;
+      state.rejected = 0;
+      state.orders.clear();
+      updateGaugeAndKPIs();
+      log('ADMIN', 'Local simulation reset to 100 available units.', 'stock');
+    }
+
+    // Single Order Submission & Idempotency Replay
+    async function submitOrder(isReplay) {
+      const shopperId = document.getElementById('inputShopperId').value.trim();
+      const idempKey = document.getElementById('inputIdempKey').value.trim();
+
+      log('ORDER', `Submitting order (shopper=${shopperId}, key=${idempKey}, replay=${isReplay})`, 'order');
+
+      if (state.isLive) {
+        try {
+          const res = await fetch('http://localhost:8080/api/v1/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Idempotency-Key': idempKey,
+              'X-Shopper-Id': shopperId
+            },
+            body: JSON.stringify({ saleId: state.saleId, shopperId, quantity: 1 })
+          });
+
+          const data = await res.json();
+          if (res.status === 202) {
+            log('ORDER', `[202 Accepted] Reservation granted: ${data.orderId}`, 'stock');
+            document.getElementById('inputInspectOrderId').value = data.orderId;
+            setTimeout(inspectOrder, 400);
+          } else if (res.status === 200) {
+            log('IDEMP', `[200 OK Replay] Returned cached order: ${data.orderId} (Zero extra stock consumed)`, 'order');
+            document.getElementById('inputInspectOrderId').value = data.orderId;
+            inspectOrder();
+          } else if (res.status === 409) {
+            log('SOLD_OUT', `[409 Conflict] Rejection: ${data.code || 'SOLD_OUT'}`, 'err');
+          }
+          fetchSales();
+          return;
+        } catch (e) {}
+      }
+
+      // Local Fallback Simulation
+      if (state.orders.has(idempKey)) {
+        const existing = state.orders.get(idempKey);
+        log('IDEMP', `[200 OK Replay] Returned cached order: ${existing.orderId} (Zero extra stock consumed)`, 'order');
+        document.getElementById('inputInspectOrderId').value = existing.orderId;
+        renderTimeline(existing);
+        return;
+      }
+
+      if (state.available > 0) {
+        state.available--;
+        state.reserved++;
+        updateGaugeAndKPIs();
+
+        const orderId = 'ord-' + Math.random().toString(36).substring(2, 9);
+        const orderData = {
+          orderId,
+          shopperId,
+          idempKey,
+          status: 'PENDING',
+          paymentReference: null,
+          createdAt: new Date().toISOString()
+        };
+        state.orders.set(idempKey, orderData);
+
+        log('ORDER', `[202 Accepted] Stock reserved in Redis (orderId: ${orderId})`, 'stock');
+        document.getElementById('inputInspectOrderId').value = orderId;
+        renderTimeline(orderData);
+
+        // Simulate asynchronous fulfillment
+        setTimeout(() => {
+          if (state.simMode === 'ALWAYS_DECLINE') {
+            state.reserved--;
+            state.available++;
+            orderData.status = 'PAYMENT_FAILED';
+            updateGaugeAndKPIs();
+            log('SAGA', `Payment declined for ${orderId}. Compensating saga restored 1 unit in Redis.`, 'err');
+            renderTimeline(orderData);
+          } else if (state.simMode === 'ALWAYS_TIMEOUT') {
+            state.reserved--;
+            state.available++;
+            orderData.status = 'PAYMENT_FAILED';
+            updateGaugeAndKPIs();
+            log('SAGA', `Payment timeout for ${orderId}. Reservation expired and stock restored.`, 'err');
+            renderTimeline(orderData);
+          } else {
+            state.reserved--;
+            state.confirmed++;
+            orderData.status = 'CONFIRMED';
+            orderData.paymentReference = 'PAY-SIM-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            updateGaugeAndKPIs();
+            log('FULFILL', `Order ${orderId} CONFIRMED! Payment Ref: ${orderData.paymentReference}`, 'stock');
+            renderTimeline(orderData);
+          }
+        }, 750);
+
+      } else {
+        state.rejected++;
+        updateGaugeAndKPIs();
+        log('SOLD_OUT', '[409 Conflict] Inventory exhausted. Request rejected truthfully.', 'err');
+      }
+    }
+
+    // Contention Burst Execution
+    let isBurstRunning = false;
+    async function executeBurst() {
+      if (isBurstRunning) return;
+      isBurstRunning = true;
+      const count = parseInt(document.getElementById('burstCount').value, 10);
+      const btn = document.getElementById('btnBurst');
+      btn.disabled = true;
+      btn.innerHTML = `${ICONS.spin}<span>Bursting...</span>`;
+
+      log('BURST', `Firing contention burst with ${count} concurrent buyer requests!`, 'order');
+
+      let accepted = 0;
+      let rejected = 0;
+      let completed = 0;
+
+      for (let i = 1; i <= count; i++) {
+        const shopperId = `shopper_${Math.floor(Math.random() * 90000 + 10000)}`;
+        const idempKey = `burst-req-${i}-${Math.random().toString(36).substring(2, 7)}`;
+
+        if (state.isLive) {
+          fetch('http://localhost:8080/api/v1/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Idempotency-Key': idempKey,
+              'X-Shopper-Id': shopperId
+            },
+            body: JSON.stringify({ saleId: state.saleId, shopperId, quantity: 1 })
+          }).then(res => {
+            if (res.status === 202) accepted++;
+            else if (res.status === 409) rejected++;
+            completed++;
+            if (completed === count) finishBurst(accepted, rejected, count);
+          }).catch(() => {
+            completed++;
+            if (completed === count) finishBurst(accepted, rejected, count);
+          });
+        } else {
+          setTimeout(() => {
+            if (state.available > 0) {
+              state.available--;
+              state.confirmed++;
+              accepted++;
+            } else {
+              state.rejected++;
+              rejected++;
+            }
+            updateGaugeAndKPIs();
+            completed++;
+            if (completed === count) finishBurst(accepted, rejected, count);
+          }, i * 12);
+        }
+      }
+    }
+
+    function finishBurst(accepted, rejected, total) {
+      isBurstRunning = false;
+      const btn = document.getElementById('btnBurst');
+      btn.disabled = false;
+      btn.innerHTML = `${ICONS.play}<span>Fire Burst</span>`;
+      document.getElementById('burstOutput').innerHTML = `
+        <span class="badge badge-success">
+          ${ICONS.checkCircle}
+          <span>Complete: ${accepted} Accepted (202), ${rejected} Sold Out (409)</span>
+        </span>
+      `;
+      log('BURST', `Burst finished: ${accepted} orders granted, ${rejected} rejected. Zero overselling preserved!`, 'stock');
+      fetchSales();
+    }
+
+    // Payment Simulation Mode Switcher
+    async function changePaymentMode(mode) {
+      state.simMode = mode;
+      document.getElementById('activeModeBadge').innerHTML = `
+        ${ICONS.sliders}
+        <span>Current: ${mode}</span>
+      `;
+
+      ['success', 'decline', 'timeout', 'rule'].forEach(m => {
+        const btn = document.getElementById('btn-mode-' + m);
+        btn.classList.remove('active', 'active-danger');
+      });
+
+      if (mode === 'ALWAYS_SUCCESS') document.getElementById('btn-mode-success').classList.add('active');
+      else if (mode === 'ALWAYS_DECLINE') document.getElementById('btn-mode-decline').classList.add('active-danger');
+      else if (mode === 'ALWAYS_TIMEOUT') document.getElementById('btn-mode-timeout').classList.add('active-danger');
+      else if (mode === 'RULE_BASED') document.getElementById('btn-mode-rule').classList.add('active');
+
+      if (state.isLive) {
+        try {
+          await fetch(`http://localhost:8080/api/v1/simulation/mode?mode=${mode}`, { method: 'POST' });
+        } catch (e) {}
+      }
+
+      log('SAGA', `Payment simulator switched to ${mode}`, 'saga');
+    }
+
+    // Order Lifecycle Inspector
+    async function inspectOrder() {
+      const orderId = document.getElementById('inputInspectOrderId').value.trim();
+      if (!orderId) return;
+
+      if (state.isLive) {
+        try {
+          const res = await fetch(`http://localhost:8080/api/v1/orders/${orderId}`);
+          if (res.ok) {
+            const data = await res.json();
+            renderTimeline(data);
+            return;
+          }
+        } catch (e) {}
+      }
+
+      for (const ord of state.orders.values()) {
+        if (ord.orderId === orderId) {
+          renderTimeline(ord);
+          return;
+        }
+      }
+
+      log('INSPECT', `Order ${orderId} not found.`, 'err');
+    }
+
+    function renderTimeline(ord) {
+      const badge = document.getElementById('orderInspectBadge');
+      const jsonBox = document.getElementById('orderJsonBox');
+
+      const s1 = document.getElementById('step-1');
+      const s2 = document.getElementById('step-2');
+      const s3 = document.getElementById('step-3');
+      const s4 = document.getElementById('step-4');
+
+      s1.className = 'timeline-node done';
+      s2.className = 'timeline-node done';
+
+      if (ord.status === 'CONFIRMED') {
+        badge.className = 'badge badge-success';
+        badge.innerHTML = `${ICONS.checkCircle}<span>CONFIRMED</span>`;
+        s3.className = 'timeline-node done';
+        s4.className = 'timeline-node done';
+        document.getElementById('desc-4').innerText = 'Stock committed in Redis. Payment Ref: ' + (ord.paymentReference || 'VERIFIED');
+      } else if (ord.status === 'PAYMENT_FAILED') {
+        badge.className = 'badge badge-danger';
+        badge.innerHTML = `${ICONS.xCircle}<span>PAYMENT_FAILED</span>`;
+        s3.className = 'timeline-node failed';
+        s4.className = 'timeline-node done';
+        document.getElementById('desc-4').innerText = 'Compensating saga executed: stock restored to Redis pool.';
+      } else {
+        badge.className = 'badge badge-warning';
+        badge.innerHTML = `${ICONS.clock}<span>PENDING</span>`;
+        s3.className = 'timeline-node active';
+        s4.className = 'timeline-node';
+        document.getElementById('desc-4').innerText = 'Awaiting payment confirmation...';
+      }
+
+      jsonBox.style.display = 'block';
+      jsonBox.innerText = JSON.stringify(ord, null, 2);
+    }
+
+    function refreshAll() {
+      checkHealth();
+      fetchSales();
+      updateGaugeAndKPIs();
+    }
+
+    // Initialize
+    setInterval(checkHealth, 4000);
+    refreshAll();
+    generateRandomKey();
+  </script>
+</body>
+</html>

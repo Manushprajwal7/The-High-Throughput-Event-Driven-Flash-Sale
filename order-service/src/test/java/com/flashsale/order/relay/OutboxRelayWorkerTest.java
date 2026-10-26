@@ -46,7 +46,7 @@ class OutboxRelayWorkerTest {
             eventId, "ORDER", orderId, "ORDER_RESERVED", 1, "{\"orderId\":\"" + orderId + "\"}"
         );
 
-        when(outboxEventRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc())
+        when(outboxEventRepository.findEligibleEventsForPublishing(any(), any()))
             .thenReturn(List.of(event));
 
         RecordMetadata metadata = new RecordMetadata(new TopicPartition(KafkaTopics.ORDERS_TOPIC, 0), 0, 0, 0, 0, 0);
@@ -68,7 +68,7 @@ class OutboxRelayWorkerTest {
         relayWorker.setPaused(true);
         relayWorker.pollAndRelayEvents();
 
-        verify(outboxEventRepository, never()).findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
+        verify(outboxEventRepository, never()).findEligibleEventsForPublishing(any(), any());
         verify(kafkaTemplate, never()).send(any(), any(), any());
     }
 
@@ -80,7 +80,7 @@ class OutboxRelayWorkerTest {
             eventId, "ORDER", orderId, "ORDER_RESERVED", 1, "{\"orderId\":\"" + orderId + "\"}"
         );
 
-        when(outboxEventRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc())
+        when(outboxEventRepository.findEligibleEventsForPublishing(any(), any()))
             .thenReturn(List.of(event));
 
         CompletableFuture<SendResult<String, String>> failedFuture = new CompletableFuture<>();
@@ -107,7 +107,7 @@ class OutboxRelayWorkerTest {
         );
         event.setAttemptCount(4); // 5th attempt will exhaust
 
-        when(outboxEventRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc())
+        when(outboxEventRepository.findEligibleEventsForPublishing(any(), any()))
             .thenReturn(List.of(event));
 
         CompletableFuture<SendResult<String, String>> failedFuture = new CompletableFuture<>();

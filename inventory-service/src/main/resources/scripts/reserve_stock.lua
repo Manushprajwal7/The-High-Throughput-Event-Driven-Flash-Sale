@@ -14,7 +14,7 @@
 
 -- 1. Check idempotency if idempotency key passed
 if KEYS[5] and KEYS[5] ~= '' and redis.call('EXISTS', KEYS[5]) == 1 then
-    return 1 -- Idempotent success: reservation already recorded
+    return 2 -- Idempotent hit: already reserved
 end
 
 -- 2. Check sale status if sale key exists
@@ -58,7 +58,8 @@ end
 
 -- 7. Record idempotency key if provided
 if KEYS[5] and KEYS[5] ~= '' and ARGV[6] then
-    redis.call('SET', KEYS[5], ARGV[6], 'EX', tonumber(ARGV[2]))
+    redis.call('SET', KEYS[5], ARGV[6])
+    redis.call('EXPIRE', KEYS[5], tonumber(ARGV[2]))
 end
 
 return 1 -- SUCCESS

@@ -29,6 +29,9 @@ class SaleControllerTest {
     @Mock
     private SaleService saleService;
 
+    @Mock
+    private com.flashsale.inventory.service.StockRehydrationService stockRehydrationService;
+
     @InjectMocks
     private SaleController saleController;
 

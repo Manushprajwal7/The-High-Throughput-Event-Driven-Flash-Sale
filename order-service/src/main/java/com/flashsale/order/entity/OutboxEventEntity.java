@@ -43,6 +43,12 @@ public class OutboxEventEntity {
     @Column(name = "attempt_count", nullable = false)
     private int attemptCount = 0;
 
+    @Column(name = "next_retry_at")
+    private Instant nextRetryAt;
+
+    @Column(name = "status", length = 32)
+    private String status = "PENDING";
+
     @Column(name = "last_error", length = 1024)
     private String lastError;
 
@@ -93,6 +99,12 @@ public class OutboxEventEntity {
 
     public int getAttemptCount() { return attemptCount; }
     public void setAttemptCount(int attemptCount) { this.attemptCount = attemptCount; }
+
+    public Instant getNextRetryAt() { return nextRetryAt; }
+    public void setNextRetryAt(Instant nextRetryAt) { this.nextRetryAt = nextRetryAt; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public String getLastError() { return lastError; }
     public void setLastError(String lastError) { this.lastError = lastError; }

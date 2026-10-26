@@ -55,7 +55,7 @@ class OrderDatabaseConcurrencyIntegrationTest {
         CreateOrderRequest request = new CreateOrderRequest(saleId, shopperId, 1);
 
         // Inventory client simulates generating a reservation
-        when(inventoryClient.reserveStock(eq(saleId), eq(shopperId), eq(1), any()))
+        when(inventoryClient.reserveStock(eq(saleId), eq(shopperId), eq(1), eq(idempotencyKey), any()))
             .thenAnswer(inv -> new ReservationResponse(UUID.randomUUID(), saleId, 1, Instant.now().plusSeconds(120)));
 
         int concurrentThreads = 20;

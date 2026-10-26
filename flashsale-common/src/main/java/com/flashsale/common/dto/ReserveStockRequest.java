@@ -14,7 +14,9 @@ public record ReserveStockRequest(
 
     @Min(value = 10, message = "Reservation TTL must be at least 10 seconds")
     @Max(value = 600, message = "Reservation TTL cannot exceed 600 seconds")
-    Integer reservationTtlSeconds
+    Integer reservationTtlSeconds,
+
+    String idempotencyKey
 ) {
     public ReserveStockRequest {
         if (quantity == null) {
@@ -23,5 +25,9 @@ public record ReserveStockRequest(
         if (reservationTtlSeconds == null) {
             reservationTtlSeconds = 120;
         }
+    }
+
+    public ReserveStockRequest(String shopperId, Integer quantity, Integer reservationTtlSeconds) {
+        this(shopperId, quantity, reservationTtlSeconds, null);
     }
 }

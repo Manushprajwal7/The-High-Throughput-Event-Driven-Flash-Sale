@@ -102,8 +102,11 @@ public class ReservationService {
         String resKey = InventoryKeyUtils.reservationKey(saleId, reservationId);
         String saleKey = InventoryKeyUtils.saleKey(saleId);
         String expKey = InventoryKeyUtils.expirationsKey(saleId);
+        String idemKey = (req.idempotencyKey() != null && !req.idempotencyKey().isBlank())
+            ? "flashsale:res_idempotency:" + saleId + ":" + req.idempotencyKey()
+            : "";
 
-        List<String> keys = List.of(stockKey, resKey, saleKey, expKey);
+        List<String> keys = List.of(stockKey, resKey, saleKey, expKey, idemKey);
         List<String> args = List.of(
             String.valueOf(req.quantity()),
             String.valueOf(req.reservationTtlSeconds()),
@@ -121,6 +124,19 @@ public class ReservationService {
                     successCounter.increment();
                     log.info("Reserved stock: sale={}, res={}, qty={}, shopper={}", saleId, reservationId, req.quantity(), req.shopperId());
                     return Mono.just(new ReservationResponse(reservationId, saleId, req.quantity(), expiresAt));
+                } else if (code == 2L) {
+                    successCounter.increment();
+                    log.info("Idempotent reservation hit for sale={}, idemKey={}", saleId, req.idempotencyKey());
+                    return redisTemplate.opsForValue().get(idemKey)
+                        .map(existingIdStr -> {
+                            try {
+                                return UUID.fromString(existingIdStr);
+                            } catch (Exception e) {
+                                return reservationId;
+                            }
+                        })
+                        .defaultIfEmpty(reservationId)
+                        .map(existingId -> new ReservationResponse(existingId, saleId, req.quantity(), expiresAt));
                 } else if (code == 0L) {
                     soldOutCounter.increment();
                     return Mono.error(new SoldOutException(saleId));

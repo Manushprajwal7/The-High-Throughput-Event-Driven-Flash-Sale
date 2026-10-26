@@ -73,7 +73,7 @@ class OrderServiceIdempotencyTest {
             .thenReturn(Optional.empty());
 
         UUID resId = UUID.randomUUID();
-        when(inventoryClient.reserveStock(eq(saleId), eq(shopperId), eq(1), any()))
+        when(inventoryClient.reserveStock(eq(saleId), eq(shopperId), eq(1), any(), any()))
             .thenReturn(new ReservationResponse(resId, saleId, 1, Instant.now().plusSeconds(120)));
 
         doNothing().when(orderPersistenceHelper).persistOrderAndReservation(any(), any(), any());
@@ -85,7 +85,7 @@ class OrderServiceIdempotencyTest {
         assertThat(response.reservationId()).isEqualTo(resId);
         assertThat(response.message()).contains("accepted");
 
-        verify(inventoryClient, times(1)).reserveStock(any(), any(), anyInt(), any());
+        verify(inventoryClient, times(1)).reserveStock(any(), any(), anyInt(), any(), any());
         verify(orderPersistenceHelper, times(1)).persistOrderAndReservation(any(), any(), any());
     }
 
@@ -113,7 +113,7 @@ class OrderServiceIdempotencyTest {
         assertThat(response.message()).contains("existing");
 
         // Inventory reservation must NOT be called for duplicate requests
-        verify(inventoryClient, never()).reserveStock(any(), any(), anyInt(), any());
+        verify(inventoryClient, never()).reserveStock(any(), any(), anyInt(), any(), any());
         verify(orderRepository, never()).saveAndFlush(any());
     }
 
@@ -141,7 +141,7 @@ class OrderServiceIdempotencyTest {
             .isInstanceOf(IdempotencyConflictException.class)
             .hasMessageContaining("different request payload");
 
-        verify(inventoryClient, never()).reserveStock(any(), any(), anyInt(), any());
+        verify(inventoryClient, never()).reserveStock(any(), any(), anyInt(), any(), any());
     }
 
     @Test
@@ -157,7 +157,7 @@ class OrderServiceIdempotencyTest {
             .thenReturn(Optional.empty());
 
         UUID resId = UUID.randomUUID();
-        when(inventoryClient.reserveStock(eq(saleId), eq(shopperId), eq(1), any()))
+        when(inventoryClient.reserveStock(eq(saleId), eq(shopperId), eq(1), any(), any()))
             .thenReturn(new ReservationResponse(resId, saleId, 1, Instant.now().plusSeconds(120)));
 
         // Step 2: orderPersistenceHelper throws DataIntegrityViolationException (another concurrent thread won the race)

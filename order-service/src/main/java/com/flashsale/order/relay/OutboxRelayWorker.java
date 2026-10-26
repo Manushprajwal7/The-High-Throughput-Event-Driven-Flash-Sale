@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -86,7 +87,9 @@ public class OutboxRelayWorker {
             return;
         }
 
-        List<OutboxEventEntity> pendingEvents = outboxEventRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
+        List<OutboxEventEntity> pendingEvents = outboxEventRepository.findEligibleEventsForPublishing(
+            Instant.now(), PageRequest.of(0, 100)
+        );
         if (pendingEvents.isEmpty()) {
             return;
         }
@@ -108,6 +111,7 @@ public class OutboxRelayWorker {
             kafkaTemplate.send(topic, key, event.getPayload()).get(5, TimeUnit.SECONDS);
 
             event.setPublishedAt(Instant.now());
+            event.setStatus("PUBLISHED");
             event.setLastError(null);
             outboxEventRepository.save(event);
             publishedCounter.increment();
@@ -127,6 +131,9 @@ public class OutboxRelayWorker {
             if (attempts >= MAX_PUBLISH_ATTEMPTS) {
                 routeToDeadLetterTopic(event, errMsg);
             } else {
+                long backoffMs = (long) Math.min(30000, Math.pow(2, attempts) * 500);
+                event.setNextRetryAt(Instant.now().plusMillis(backoffMs));
+                event.setStatus("PENDING");
                 outboxEventRepository.save(event);
             }
         }
@@ -138,6 +145,7 @@ public class OutboxRelayWorker {
         try {
             kafkaTemplate.send(dlqTopic, key, event.getPayload()).get(5, TimeUnit.SECONDS);
             event.setPublishedAt(Instant.now());
+            event.setStatus("ROUTED_TO_DLQ");
             event.setLastError("EXHAUSTED_RETRIES_ROUTED_TO_DLQ: " + originalError);
             outboxEventRepository.save(event);
             dlqCounter.increment();
@@ -145,6 +153,8 @@ public class OutboxRelayWorker {
         } catch (Exception dlqEx) {
             log.error("CRITICAL: Failed to route event {} to DLQ topic {}: {}",
                 event.getId(), dlqTopic, dlqEx.getMessage());
+            event.setStatus("EXHAUSTED_DLQ_FAILED");
+            event.setNextRetryAt(Instant.now().plusSeconds(300));
             outboxEventRepository.save(event);
         }
     }

@@ -15,9 +15,14 @@ import java.util.UUID;
 public class SaleController {
 
     private final SaleService saleService;
+    private final com.flashsale.inventory.service.StockRehydrationService stockRehydrationService;
 
-    public SaleController(SaleService saleService) {
+    public SaleController(
+        SaleService saleService,
+        com.flashsale.inventory.service.StockRehydrationService stockRehydrationService
+    ) {
         this.saleService = saleService;
+        this.stockRehydrationService = stockRehydrationService;
     }
 
     @GetMapping("/api/v1/sales")
@@ -49,5 +54,14 @@ public class SaleController {
     @PostMapping("/api/v1/admin/sales/{saleId}/close")
     public Mono<SaleResponse> closeSale(@PathVariable UUID saleId) {
         return saleService.closeSale(saleId);
+    }
+
+    @PostMapping("/api/v1/admin/sales/{saleId}/rehydrate")
+    public Mono<java.util.Map<String, Object>> rehydrateSale(
+        @PathVariable UUID saleId,
+        @RequestParam(defaultValue = "0") int committedUnits
+    ) {
+        return stockRehydrationService.rehydrateStock(saleId, committedUnits)
+            .map(stock -> java.util.Map.of("saleId", saleId, "rehydratedStock", stock));
     }
 }

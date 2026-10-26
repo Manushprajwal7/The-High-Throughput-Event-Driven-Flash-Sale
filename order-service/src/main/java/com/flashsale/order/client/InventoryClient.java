@@ -32,7 +32,11 @@ public class InventoryClient {
     }
 
     public ReservationResponse reserveStock(UUID saleId, String shopperId, int quantity, String correlationId) {
-        ReserveStockRequest request = new ReserveStockRequest(shopperId, quantity, 120);
+        return reserveStock(saleId, shopperId, quantity, null, correlationId);
+    }
+
+    public ReservationResponse reserveStock(UUID saleId, String shopperId, int quantity, String idempotencyKey, String correlationId) {
+        ReserveStockRequest request = new ReserveStockRequest(shopperId, quantity, 120, idempotencyKey);
 
         return restClient.post()
             .uri("/api/v1/sales/{saleId}/reservations", saleId)

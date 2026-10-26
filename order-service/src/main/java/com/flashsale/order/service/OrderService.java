@@ -102,6 +102,7 @@ public class OrderService {
             request.saleId(),
             request.shopperId(),
             request.quantity(),
+            idempotencyKey,
             correlationId
         );
 
@@ -170,10 +171,14 @@ public class OrderService {
             return mapToOrderResponse(orderEntity, "Order accepted for processing");
         } catch (DataIntegrityViolationException ex) {
             // Race condition: another thread committed with the same key
-            log.warn("Concurrent duplicate submission detected for key {}. Reverting reservation {}.", idempotencyKey, reservation.reservationId());
-            inventoryClient.releaseStock(request.saleId(), reservation.reservationId(), "CONCURRENT_IDEMPOTENCY_RACE", correlationId);
-
             OrderEntity winner = findWinnerOrderWithRetry(request.saleId(), request.shopperId(), idempotencyKey);
+
+            if (!winner.getReservationId().equals(reservation.reservationId())) {
+                log.warn("Concurrent duplicate submission detected for key {}. Reverting orphaned reservation {}.", idempotencyKey, reservation.reservationId());
+                inventoryClient.releaseStock(request.saleId(), reservation.reservationId(), "CONCURRENT_IDEMPOTENCY_RACE", correlationId);
+            } else {
+                log.info("Concurrent duplicate submission for key {} shared reservation {}. Skipping release.", idempotencyKey, reservation.reservationId());
+            }
 
             if (!winner.getRequestFingerprint().equals(fingerprint)) {
                 idempotencyConflictCounter.increment();

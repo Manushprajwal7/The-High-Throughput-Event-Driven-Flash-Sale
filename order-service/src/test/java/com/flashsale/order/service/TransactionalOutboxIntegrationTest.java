@@ -73,7 +73,7 @@ class TransactionalOutboxIntegrationTest {
 
         CreateOrderRequest request = new CreateOrderRequest(saleId, shopperId, 1);
 
-        when(inventoryClient.reserveStock(eq(saleId), eq(shopperId), eq(1), any()))
+        when(inventoryClient.reserveStock(eq(saleId), eq(shopperId), eq(1), any(), any()))
             .thenReturn(new ReservationResponse(resId, saleId, 1, Instant.now().plusSeconds(120)));
 
         // 1. Submit purchase request

@@ -34,6 +34,9 @@ public class KafkaConsumerConfig {
     @Value("${spring.kafka.consumer.group-id:payment-fulfillment-workers}")
     private String groupId;
 
+    @Value("${spring.kafka.listener.concurrency:12}")
+    private int concurrency;
+
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
@@ -43,6 +46,8 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        props.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,
+            "org.apache.kafka.clients.consumer.CooperativeStickyAssignor");
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
@@ -68,6 +73,7 @@ public class KafkaConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
             new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
+        factory.setConcurrency(concurrency);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
 
         // Bounded retries (3 attempts with 500ms backoff) and dead-letter routing to flashsale.orders.dlq.v1
